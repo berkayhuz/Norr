@@ -1,4 +1,4 @@
-<p align="left">
+﻿<p align="left">
   <img src="norr_250x250.png" alt="Norr Logo" width="32" style="vertical-align: middle;"/>
   <span style="font-size: 2em; font-weight: bold; vertical-align: middle;">Norr</span>
 </p>

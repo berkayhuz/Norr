@@ -1,0 +1,44 @@
+name: Publish NuGet Packages
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches:
+      - main
+    paths:
+      - 'src/Norr.PerformanceMonitor/**'
+      - 'src/Norr.PerformanceMonitor.Attribution/**'
+      - '.github/workflows/nuget-publish.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build Norr.sln -c Release --no-restore
+
+      - name: Pack Norr.PerformanceMonitor
+        run: dotnet pack ./src/Norr.PerformanceMonitor/Norr.PerformanceMonitor.csproj -c Release --no-build -o out /p:PackageVersion=${{ env.VERSION }}
+
+      - name: Pack Norr.PerformanceMonitor.Attribution
+        run: dotnet pack ./src/Norr.PerformanceMonitor.Attribution/Norr.PerformanceMonitor.Attribution.csproj -c Release --no-build -o out /p:PackageVersion=${{ env.VERSION }}
+
+      - name: Push to NuGet
+        run: dotnet nuget push out/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json

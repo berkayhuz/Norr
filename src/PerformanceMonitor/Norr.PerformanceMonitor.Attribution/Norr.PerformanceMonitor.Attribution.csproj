@@ -17,10 +17,9 @@
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <Deterministic>true</Deterministic>
-        <ImplicitUsings>enable</ImplicitUsings>
         <WarningsAsErrors>nullable</WarningsAsErrors>
 
-        <Authors>Berkay Huz</Authors>
+        <Authors>Norr</Authors>
         <Company>Norr</Company>
         <Description>High-performance monitoring tools for .NET: track execution time, generate flamegraphs, export to Prometheus, and receive alerts.</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

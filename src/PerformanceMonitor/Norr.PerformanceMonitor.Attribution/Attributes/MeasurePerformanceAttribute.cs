@@ -1,4 +1,6 @@
-﻿namespace Norr.PerformanceMonitor.Attribution.Attributes;
+﻿using System;
+
+namespace Norr.PerformanceMonitor.Attribution.Attributes;
 
 /// <summary>
 /// Marks a method or constructor for performance monitoring.  

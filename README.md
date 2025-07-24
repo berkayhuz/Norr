@@ -31,4 +31,3 @@ Refer to individual package READMEs for installation and examples.
 ## 📄 License
 
 [MIT](./LICENSE) © 2025 Berkay Huz  
-Maintained with ❤️ from Türkiye 🇹🇷

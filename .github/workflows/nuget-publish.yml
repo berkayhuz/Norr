@@ -3,42 +3,65 @@ name: Publish NuGet Packages
 on:
   push:
     tags:
-      - 'v*.*.*'
-    branches:
-      - main
-    paths:
-      - 'src/Norr.PerformanceMonitor/**'
-      - 'src/Norr.PerformanceMonitor.Attribution/**'
-      - '.github/workflows/nuget-publish.yml'
+      - "v*.*.*"
+  workflow_dispatch:
+
+concurrency:
+  group: nuget-publish-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: |
+            9.0.x
 
       - name: Extract version from tag
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+        run: |
+          RAW="${GITHUB_REF_NAME}"
+          echo "semver=${RAW#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore
+        run: dotnet restore Norr.sln
 
-      - name: Build solution
+      - name: Build (Release)
         run: dotnet build Norr.sln -c Release --no-restore
 
       - name: Pack Norr.PerformanceMonitor
-        run: dotnet pack ./src/Norr.PerformanceMonitor/Norr.PerformanceMonitor.csproj -c Release --no-build -o out /p:PackageVersion=${{ env.VERSION }}
+        run: >
+          dotnet pack ./src/PerformanceMonitor/Norr.PerformanceMonitor/Norr.PerformanceMonitor.csproj
+          -c Release --no-build -o out
+          /p:PackageVersion=${{ steps.version.outputs.semver }}
 
       - name: Pack Norr.PerformanceMonitor.Attribution
-        run: dotnet pack ./src/Norr.PerformanceMonitor.Attribution/Norr.PerformanceMonitor.Attribution.csproj -c Release --no-build -o out /p:PackageVersion=${{ env.VERSION }}
+        run: >
+          dotnet pack ./src/PerformanceMonitor/Norr.PerformanceMonitor.Attribution/Norr.PerformanceMonitor.Attribution.csproj
+          -c Release --no-build -o out
+          /p:PackageVersion=${{ steps.version.outputs.semver }}
 
-      - name: Push to NuGet
-        run: dotnet nuget push out/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      - name: Pack Norr.PerformanceMonitor.OpenTelemetry
+        run: >
+          dotnet pack ./src/PerformanceMonitor/Norr.PerformanceMonitor.OpenTelemetry/Norr.PerformanceMonitor.OpenTelemetry.csproj
+          -c Release --no-build -o out
+          /p:PackageVersion=${{ steps.version.outputs.semver }}
+
+      - name: Pack Norr.PerformanceMonitor.Analyzer
+        run: >
+          dotnet pack ./src/PerformanceMonitor/Norr.PerformanceMonitor.Analyzer/Norr.PerformanceMonitor.Analyzer.csproj
+          -c Release --no-build -o out
+          /p:PackageVersion=${{ steps.version.outputs.semver }}
+
+      - name: Push to NuGet (nupkg + snupkg)
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push out/*.nupkg  --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
+          dotnet nuget push out/*.snupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json

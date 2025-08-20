@@ -1,4 +1,9 @@
-﻿using System.Diagnostics.Tracing;
+// Copyright (c) Norr
+// Licensed under the MIT license.
+
+#nullable enable 
+
+using System.Diagnostics.Tracing;
 
 using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.Diagnostics.Tracing.Etlx;

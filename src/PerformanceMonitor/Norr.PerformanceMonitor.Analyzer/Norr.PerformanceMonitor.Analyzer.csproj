@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+
+		<AssemblyName>Norr.PerformanceMonitor.Analyzer</AssemblyName>
+		<RootNamespace>Norr</RootNamespace>
+		<Description>Roslyn analyzer rules for Norr PerformanceMonitor APIs and best practices.</Description>
+		<PackageTags>norr;roslyn;analyzers;code-quality;performance</PackageTags>
+		<PackageIcon>Norr.PerformanceMonitor.Analyzer.png</PackageIcon>
+
+		<IsPackable>true</IsPackable>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<PackageType>Analyzer</PackageType>
+		<DevelopmentDependency>true</DevelopmentDependency>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<NoWarn>$(NoWarn);CS1591;CS1573;CS8019</NoWarn>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+		<IncludeSymbols>false</IncludeSymbols>
+		<SymbolPackageFormat></SymbolPackageFormat>
+		<DebugType>portable</DebugType>
+
+		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);PackAnalyzer</TargetsForTfmSpecificBuildOutput>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp"  PrivateAssets="All" />
+	</ItemGroup>
+
+	<Target Name="PackAnalyzer">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).dll" PackagePath="analyzers/dotnet/cs" />
+			<TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).pdb"
+									PackagePath="analyzers/dotnet/cs"
+									Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
+		</ItemGroup>
+	</Target>
+
+	<Target Name="CreateRefPlaceholder" BeforeTargets="GenerateNuspec">
+		<PropertyGroup>
+			<_RefDir>$(IntermediateOutputPath)ref\netstandard2.0</_RefDir>
+			<_RefPlaceholder>$(_RefDir)\_._</_RefPlaceholder>
+		</PropertyGroup>
+		<MakeDir Directories="$(_RefDir)" />
+		<WriteLinesToFile File="$(_RefPlaceholder)" Lines="" Overwrite="true" />
+		<ItemGroup>
+			<None Include="$(_RefPlaceholder)" Pack="true" PackagePath="ref/netstandard2.0/_._" Visible="false" />
+		</ItemGroup>
+	</Target>
+</Project>

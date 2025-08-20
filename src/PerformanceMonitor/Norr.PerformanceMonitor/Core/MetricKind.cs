@@ -1,4 +1,9 @@
-﻿namespace Norr.PerformanceMonitor.Core;
+// Copyright (c) Norr
+// Licensed under the MIT license.
+
+#nullable enable 
+
+namespace Norr.PerformanceMonitor.Core;
 
 /// <summary>
 /// Enumerates the kinds of measurements captured by the library.

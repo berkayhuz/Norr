@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<AssemblyName>Norr.PerformanceMonitor.Benchmarks</AssemblyName>
+		<RootNamespace>Norr</RootNamespace>
+		<IsPackable>false</IsPackable>
+		<Optimize>true</Optimize>
+		<DebugType>portable</DebugType>
+		<PackageIcon>Norr.PerformanceMonitor.Benchmarks.png</PackageIcon>
+
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<NoWarn>$(NoWarn);CS1591;CS1573;CS8019</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BenchmarkDotNet" />
+		<PackageReference Include="Perfolizer" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup Condition="Exists('..\..\src\PerformanceMonitor\Norr.PerformanceMonitor\Norr.PerformanceMonitor.csproj')">
+		<ProjectReference Include="..\..\src\PerformanceMonitor\Norr.PerformanceMonitor\Norr.PerformanceMonitor.csproj" />
+		<ProjectReference Include="..\..\src\PerformanceMonitor\Norr.PerformanceMonitor.Attribution\Norr.PerformanceMonitor.Attribution.csproj" />
+		<ProjectReference Include="..\..\src\PerformanceMonitor\Norr.PerformanceMonitor.OpenTelemetry\Norr.PerformanceMonitor.OpenTelemetry.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="Exists('..\..\src\PerformanceMonitor\Norr.PerformanceMonitor\Norr.PerformanceMonitor.csproj') == false and Exists('..\Norr.PerformanceMonitor\Norr.PerformanceMonitor.csproj')">
+		<ProjectReference Include="..\Norr.PerformanceMonitor\Norr.PerformanceMonitor.csproj" />
+		<ProjectReference Include="..\Norr.PerformanceMonitor.Attribution\Norr.PerformanceMonitor.Attribution.csproj" />
+		<ProjectReference Include="..\Norr.PerformanceMonitor.OpenTelemetry\Norr.PerformanceMonitor.OpenTelemetry.csproj" />
+	</ItemGroup>
+</Project>

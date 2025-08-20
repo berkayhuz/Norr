@@ -1,4 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
+// Copyright (c) Norr
+// Licensed under the MIT license.
+
+#nullable enable 
+
+using Microsoft.Extensions.Logging;
+
+using Norr.Diagnostics.Abstractions.Logging;
+
+using static Norr.Diagnostics.Abstractions.Logging.NorrLoggerPackages;
 
 namespace Norr.PerformanceMonitor.Profiling;
 
@@ -21,18 +30,12 @@ namespace Norr.PerformanceMonitor.Profiling;
 public sealed class FlamegraphManager
 {
     private FlamegraphRecorder? _rec;
-    private readonly ILogger<FlamegraphManager> _log;
-
-    /// <summary>
-    /// DI-friendly constructor.
-    /// </summary>
-    public FlamegraphManager(ILogger<FlamegraphManager> log) => _log = log;
 
     /// <summary>
     /// Begins a new flamegraph recording.  
     /// If a session is already active it is first disposed (and its file flushed).
     /// </summary>
-    public void Start()
+    public void Start(ILogger? logger = null)
     {
         _rec?.DisposeAsync().AsTask().Wait();
 
@@ -40,7 +43,8 @@ public sealed class FlamegraphManager
         var fullPath = Path.Combine(AppContext.BaseDirectory, fileName);
 
         _rec = FlamegraphRecorder.Start(fullPath);
-        _log.LogInformation("Flamegraph recording started → {File}", fileName);
+
+        logger?.PM().FlameStart(fileName);
     }
 
     /// <summary>
@@ -48,7 +52,7 @@ public sealed class FlamegraphManager
     /// SpeedScope JSON file.  
     /// When no recording is active an empty string is returned.
     /// </summary>
-    public async Task<string> StopAsync()
+    public async Task<string> StopAsync(ILogger? logger = null)
     {
         if (_rec is null)
             return string.Empty;
@@ -57,7 +61,7 @@ public sealed class FlamegraphManager
         var path = _rec.OutputPath;
         _rec = null;
 
-        _log.LogInformation("Flamegraph saved → {File}", path);
+        logger?.PM().FlameSaved(path);
         return path;
     }
 }

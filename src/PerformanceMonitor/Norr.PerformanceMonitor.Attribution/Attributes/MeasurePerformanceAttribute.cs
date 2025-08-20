@@ -1,4 +1,9 @@
-﻿using System;
+// Copyright (c) Norr
+// Licensed under the MIT license.
+
+#nullable enable 
+
+using Norr.PerformanceMonitor.Attribution.Generators;
 
 namespace Norr.PerformanceMonitor.Attribution.Attributes;
 

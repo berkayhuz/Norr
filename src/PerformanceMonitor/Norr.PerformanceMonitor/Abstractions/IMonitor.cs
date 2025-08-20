@@ -1,4 +1,9 @@
-﻿namespace Norr.PerformanceMonitor.Abstractions;
+// Copyright (c) Norr
+// Licensed under the MIT license.
+
+#nullable enable 
+
+namespace Norr.PerformanceMonitor.Abstractions;
 
 /// <summary>
 /// Root entry point for recording performance data within the application.

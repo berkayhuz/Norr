@@ -1,4 +1,9 @@
-﻿using Norr.PerformanceMonitor.Abstractions;
+// Copyright (c) Norr
+// Licensed under the MIT license.
+
+#nullable enable 
+
+using Norr.PerformanceMonitor.Abstractions;
 using Norr.PerformanceMonitor.Core.Metrics;
 
 namespace Norr.PerformanceMonitor.Exporters;

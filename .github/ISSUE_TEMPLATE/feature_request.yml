@@ -1,0 +1,35 @@
+name: "Feature Request"
+description: Suggest a new feature
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+body:
+    - type: textarea
+      id: problem
+      attributes:
+          label: Related Problem
+          description: What problem does this feature solve?
+    - type: textarea
+      id: solution
+      attributes:
+          label: Proposed Solution
+          description: Describe your proposal in detail (API design, example usage, acceptance criteria).
+    - type: textarea
+      id: alternatives
+      attributes:
+          label: Alternatives
+          description: Alternative approaches you have considered
+    - type: textarea
+      id: context
+      attributes:
+          label: Additional Context
+          description: References, links, benchmarks, etc.
+    - type: checkboxes
+      id: checks
+      attributes:
+          label: Checklist
+          options:
+              - label: I have verified there is no similar feature request
+                required: true
+              - label: I am willing to open a PR if needed
+                required: false

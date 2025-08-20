@@ -1,0 +1,79 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <Deterministic>true</Deterministic>
+
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)'=='true' Or '$(CI)'=='true'">true</ContinuousIntegrationBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+    <Authors>Norr</Authors>
+    <Company>Norr</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/berkayhuz/Norr</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/berkayhuz/Norr.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>Modular, production-grade .NET libraries by Norr. Clean Architecture,
+            zero-bloat.</Description>
+    <PackageTags>dotnet;performance;monitoring;opentelemetry;metrics;tracing;prometheus</PackageTags>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+
+    <PackageReadmeFile Condition="'$(PackageReadmeFile)'=='' and Exists('$(MSBuildProjectDirectory)\README.md')">README.md</PackageReadmeFile>
+    <PackageReadmeFile Condition="'$(PackageReadmeFile)'=='' and Exists('$(MSBuildThisFileDirectory)README.md')">README.md</PackageReadmeFile>
+
+    <PackageIcon Condition="Exists('$(MSBuildProjectDirectory)\$(PackageId).png')">$(PackageId).png</PackageIcon>
+    <PackageIcon Condition="'$(PackageIcon)'=='' and Exists('$(MSBuildProjectDirectory)\$(AssemblyName).png')">$(AssemblyName).png</PackageIcon>
+    <PackageIcon Condition="'$(PackageIcon)'=='' and Exists('$(MSBuildThisFileDirectory)Norr.png')">Norr.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildProjectDirectory)\README.md"
+          Condition="Exists('$(MSBuildProjectDirectory)\README.md') and '$(PackageReadmeFile)'=='README.md'"
+          Pack="true" PackagePath="/" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)README.md"
+          Condition="!Exists('$(MSBuildProjectDirectory)\README.md') and Exists('$(MSBuildThisFileDirectory)README.md') and '$(PackageReadmeFile)'=='README.md'"
+          Pack="true" PackagePath="/" Visible="false" />
+
+    <None Include="$(MSBuildThisFileDirectory)LICENSE"
+          Condition="Exists('$(MSBuildThisFileDirectory)LICENSE')"
+          Pack="true" PackagePath="/" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true' and '$(PackageIcon)'!=''">
+
+    <None Include="$(MSBuildProjectDirectory)\$(PackageIcon)"
+          Condition="Exists('$(MSBuildProjectDirectory)\$(PackageIcon)')"
+          Pack="true" PackagePath="/" Visible="false" />
+          
+    <None Include="$(MSBuildThisFileDirectory)$(PackageIcon)"
+          Condition="!Exists('$(MSBuildProjectDirectory)\$(PackageIcon)') and Exists('$(MSBuildThisFileDirectory)$(PackageIcon)')"
+          Pack="true" PackagePath="/" Visible="false" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <DisableFastUpToDateCheck Condition="'$(BuildingInsideVisualStudio)'=='true'">true</DisableFastUpToDateCheck>
+  </PropertyGroup>
+
+  <Import Project="NuGet.PackExcludes.targets" Condition="Exists('NuGet.PackExcludes.targets')" />
+</Project>

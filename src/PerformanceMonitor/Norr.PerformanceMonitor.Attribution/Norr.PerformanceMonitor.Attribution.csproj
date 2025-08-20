@@ -1,43 +1,56 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
 
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageIcon>norr_250x250.png</PackageIcon>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageId>Norr.PerformanceMonitor.Attribution</PackageId>
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\Generated</CompilerGeneratedFilesOutputPath>
-        <OutputItemType>Analyzer</OutputItemType>
-        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<AssemblyName>Norr.PerformanceMonitor.Attribution</AssemblyName>
+		<RootNamespace>Norr</RootNamespace>
+		<Description>Attribution helpers + incremental source generator for Norr.</Description>
+		<PackageTags>norr;attribution;correlation;diagnostics;tracing;roslyn;source-generator</PackageTags>
+		<PackageIcon>Norr.PerformanceMonitor.Attribution.png</PackageIcon>
 
-        <Nullable>enable</Nullable>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <Deterministic>true</Deterministic>
-        <WarningsAsErrors>nullable</WarningsAsErrors>
+		<IsPackable>true</IsPackable>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<PackageType>Analyzer</PackageType>
+		<DevelopmentDependency>true</DevelopmentDependency>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
-        <Authors>Norr</Authors>
-        <Company>Norr</Company>
-        <Description>High-performance monitoring tools for .NET: track execution time, generate flamegraphs, export to Prometheus, and receive alerts.</Description>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/berkayhuz/PerformanceMonitor</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/berkayhuz/PerformanceMonitor</RepositoryUrl>
-    </PropertyGroup>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<AnalysisLevel>latest</AnalysisLevel>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<NoWarn>$(NoWarn);CS1591;CS1573;CS8019</NoWarn>
 
-    <ItemGroup>
-        <None Include="norr_250x250.png" Pack="true" PackagePath="" />
-        <None Include="README.md" Pack="true" PackagePath="" />
-    </ItemGroup>
+		<IncludeSymbols>false</IncludeSymbols>
+		<SymbolPackageFormat></SymbolPackageFormat>
+		<DebugType>portable</DebugType>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
-    </ItemGroup>
+		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);PackAnalyzer</TargetsForTfmSpecificBuildOutput>
+	</PropertyGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp"  PrivateAssets="All" />
+	</ItemGroup>
+
+	<Target Name="PackAnalyzer">
+		<ItemGroup>
+			<TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).dll" PackagePath="analyzers/dotnet/cs" />
+			<TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).pdb"
+									PackagePath="analyzers/dotnet/cs"
+									Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
+		</ItemGroup>
+	</Target>
+
+	<Target Name="CreateRefPlaceholder" BeforeTargets="GenerateNuspec">
+		<PropertyGroup>
+			<_RefDir>$(IntermediateOutputPath)ref\netstandard2.0</_RefDir>
+			<_RefPlaceholder>$(_RefDir)\_._</_RefPlaceholder>
+		</PropertyGroup>
+		<MakeDir Directories="$(_RefDir)" />
+		<WriteLinesToFile File="$(_RefPlaceholder)" Lines="" Overwrite="true" />
+		<ItemGroup>
+			<None Include="$(_RefPlaceholder)" Pack="true" PackagePath="ref/netstandard2.0/_._" Visible="false" />
+		</ItemGroup>
+	</Target>
 </Project>

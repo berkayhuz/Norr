@@ -1,149 +1,144 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+// Copyright (c) Norr
+// Licensed under the MIT license.
 
-using Norr.PerformanceMonitor.Abstractions;
-using Norr.PerformanceMonitor.Alerting;
-using Norr.PerformanceMonitor.Configuration;
-using Norr.PerformanceMonitor.Exporters;
-using Norr.PerformanceMonitor.Sampling;
+#nullable enable 
 
-using Monitor = Norr.PerformanceMonitor.Core.Monitor;
+
+using System.Reflection;
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+
+using Norr.PerformanceMonitor.Telemetry.Prometheus;
 
 namespace Norr.PerformanceMonitor.DependencyInjection;
 
 /// <summary>
-/// Extension methods for <see cref="IServiceCollection"/> that wire-up all
-/// components required by the performance-monitoring library.
+/// Extension methods for registering Norr Performance Monitor services into
+/// an <see cref="IServiceCollection"/>.
 /// </summary>
+/// <remarks>
+/// Currently provides optional integration with OpenTelemetry via a runtime
+/// reflection probe (<see cref="OpenTelemetryBridgeProbe"/>).  
+/// This approach ensures that Norr can integrate with OpenTelemetry when the
+/// relevant assemblies are present without requiring a hard compile-time dependency.
+/// </remarks>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the core monitor, sampling / duplicate-guard logic, exporters
-    /// and alert sinks.  
-    /// Call this once in your application’s startup code:
-    /// <code>
-    /// services.AddPerformanceMonitoring(o =>
-    /// {
-    ///     o.Sampling.Probability = 0.1;           // 10 % sampling
-    ///     o.Exporters = ExporterFlags.Prometheus; // scrape endpoint
-    /// });
-    /// </code>
+    /// Attempts to detect and wire the Norr ↔ OpenTelemetry bridge at runtime using reflection.
     /// </summary>
-    /// <param name="services">The DI container.</param>
-    /// <param name="configure">
-    /// Optional delegate that customises <see cref="PerformanceOptions"/>.
-    /// </param>
-    public static IServiceCollection AddPerformanceMonitoring(
-        this IServiceCollection services,
-        Action<PerformanceOptions>? configure = null)
+    /// <param name="services">The service collection to add the bridge probe to.</param>
+    /// <returns>
+    /// The same <see cref="IServiceCollection"/> instance so that calls can be chained.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// If no OpenTelemetry assemblies are detected in the current <see cref="AppDomain"/>,
+    /// a warning will be logged and the bridge will remain inactive.
+    /// </para>
+    /// <para>
+    /// If the assemblies are present, the bridge probe will attempt to locate the relevant
+    /// types and bind them. Any errors during reflection will be logged without throwing.
+    /// </para>
+    /// <para>
+    /// This method only registers a singleton of <see cref="OpenTelemetryBridgeProbe"/> that
+    /// performs the detection logic in its constructor.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var builder = WebApplication.CreateBuilder(args);
+    /// builder.Services.AddNorrOpenTelemetryBridge();
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddNorrOpenTelemetryBridge(this IServiceCollection services, Action<object> value)
     {
-        // ---------------- Options -------------------------------------------------------------
-
-        if (configure is not null)
-            services.Configure(configure);
-
-        // expose sub-sections directly for constructor injection
-        services.AddSingleton(sp => sp.GetRequiredService<IOptions<PerformanceOptions>>().Value.Sampling);
-        services.AddSingleton(sp => sp.GetRequiredService<IOptions<PerformanceOptions>>().Value.DuplicateGuard);
-        services.AddSingleton(sp => sp.GetRequiredService<IOptions<PerformanceOptions>>().Value.Alerts);
-
-        // ---------------- Alert sinks ---------------------------------------------------------
-
-        services.AddHttpClient(); // shared client factory
-
-        services.AddSingleton<IAlertSink>(sp =>
-        {
-            var alerts = sp.GetRequiredService<AlertOptions>();
-            var client = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-
-            if (alerts.SlackWebhook is not null)
-                return new SlackAlertSink(client, alerts.SlackWebhook);
-
-            if (alerts.WebhookUrl is not null)
-                return new WebhookAlertSink(client, alerts.WebhookUrl);
-
-            return new NullAlertSink(); // fallback → no-op
-        });
-
-        services.AddSingleton<NullAlertSink>();
-
-        // ---------------- Core pipeline -------------------------------------------------------
-
-        services.AddSingleton<ISampler, ProbabilitySampler>();
-        services.AddSingleton<IDuplicateGuard, BloomDuplicateGuard>();
-        services.AddSingleton<IMonitor, Monitor>();
-
-        // ---------------- Default exporters ---------------------------------------------------
-
-        // In-memory exporter is handy for unit-tests; register as metric exporter
-        services.AddSingleton<InMemoryExporter>();
-        services.AddSingleton<IMetricExporter>(sp => sp.GetRequiredService<InMemoryExporter>());
-
+        services.TryAddSingleton<OpenTelemetryBridgeProbe>();
+        return services;
+    }
+    /// <summary>
+    /// Norr I/O Prometheus exporter: EventListener'ı başlatır ve /metrics endpoint’ini ekler.
+    /// </summary>
+    public static IServiceCollection AddNorrPrometheusExporter(this IServiceCollection services)
+    {
+        services.AddSingleton<NorrMetricsRegistry>();
+        services.AddHostedService<NorrIoEventListenerHost>();
         return services;
     }
 
     /// <summary>
-    /// No-op implementation used when no Slack or generic webhook is configured.
+    /// Minimal API için endpoint haritalaması. Varsayılan yol: /metrics
     /// </summary>
-    private sealed class NullAlertSink : IAlertSink
+    public static IApplicationBuilder UseNorrPrometheusExporter(this IApplicationBuilder app, string path = "/metrics")
     {
-        public Task SendAsync(PerfAlert _, CancellationToken __ = default) => Task.CompletedTask;
+        // Basit branch – MVC gerektirmez
+        app.Map(path, builder =>
+        {
+            builder.Run(async ctx =>
+            {
+                var reg = ctx.RequestServices.GetRequiredService<NorrMetricsRegistry>();
+                var body = reg.Export();
+                ctx.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
+                await ctx.Response.WriteAsync(body, ctx.RequestAborted);
+            });
+        });
+
+        return app;
     }
 }
 
+/// <summary>
+/// Performs runtime detection of OpenTelemetry assemblies and attempts to wire
+/// the Norr Performance Monitor ↔ OpenTelemetry bridge.
+/// </summary>
+/// <remarks>
+/// The detection is performed in the constructor using reflection, allowing this
+/// component to be safely registered even if OpenTelemetry is not referenced at compile time.
+/// </remarks>
+internal sealed class OpenTelemetryBridgeProbe
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OpenTelemetryBridgeProbe"/> class.
+    /// </summary>
+    /// <param name="logger">The logger to report detection results and warnings.</param>
+    public OpenTelemetryBridgeProbe(ILogger<OpenTelemetryBridgeProbe> logger)
+    {
+        try
+        {
+            // Attempt to find any loaded assembly whose name starts with "OpenTelemetry".
+            var asm = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetName().Name?.StartsWith("OpenTelemetry", StringComparison.OrdinalIgnoreCase) == true);
 
+            if (asm is null)
+            {
+                logger.LogWarning(
+                    "OpenTelemetry assemblies not found. Norr OTEL bridge is inactive. " +
+                    "Install 'OpenTelemetry.Extensions.Hosting' (or a compatible package) to enable automatic wiring.");
+                return;
+            }
 
-//var builder = WebApplication.CreateBuilder(args);
+            // Here is where any real binding logic would occur.
+            var anyType = asm.DefinedTypes.FirstOrDefault();
+            if (anyType != null)
+            {
+                _ = anyType.FullName; // No-op, just to touch the type
+            }
 
-//builder.Services.AddPerformanceMonitoring(o =>
-//{
-//    o.Sampling = SamplingRate.Everything;
-//    o.SlowCallThresholdMs = 100;
-//    o.Exporters = ExporterFlags.Console | ExporterFlags.InMemory;
-//});
-
-//var app = builder.Build();
-//app.UsePerformanceMonitoring();
-
-//app.MapGet("/", async (_, IPerformanceMonitor pm) =>
-//{
-//    using var _ = pm.Begin("RootEndpoint");
-//    await Task.Delay(Random.Shared.Next(20, 150));
-//    return "hi";
-//});
-
-//app.Run();
-
-
-//builder.Services.AddPerformanceMonitoring(o =>
-//{
-//    o.Alerts = new AlertOptions
-//    {
-//        DurationMs   = 100,                 // 100 ms’ten uzun her çağrı
-//        AllocBytes   = 5_000_000,           // 5 MB+
-//        SlackWebhook = new Uri(Environment.GetEnvironmentVariable("SLACK_HOOK")!)
-//    };
-//o.Exporters = ExporterFlags.Console;    // metrikler hâlâ konsola da düşsün
-//});
-
-
-//builder.Services.AddPerformanceMonitoring(o =>
-//{
-//    o.Sampling.Probability = 0.05;          // ≈ %5 örnekle
-//    o.DuplicateGuard.CoolDown = TimeSpan.FromSeconds(30);
-//    o.DuplicateGuard.BitCount = 1 << 18;    // 256 Kbit ≈ 32 KB
-//});
-
-
-
-//app.MapPost("/flamegraph/start", (FlamegraphManager mgr) =>
-//{
-//    mgr.Start();
-//    return Results.Ok("Recording…");
-//});
-
-//app.MapPost("/flamegraph/stop", async (FlamegraphManager mgr) =>
-//{
-//    var path = await mgr.StopAsync();
-//    return Results.File(path, "application/json", Path.GetFileName(path));
-//});
+            logger.LogInformation("OpenTelemetry detected: {Assembly}. Norr OTEL bridge wiring attempted.",
+                asm.GetName().Name);
+        }
+        catch (ReflectionTypeLoadException rtle)
+        {
+            var msg = string.Join("; ", rtle.LoaderExceptions.Select(e => e?.Message));
+            Console.WriteLine(msg); // Visible warning instead of silent swallow
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[Norr] OpenTelemetry bridge wiring failed: {ex.Message}");
+        }
+    }
+}

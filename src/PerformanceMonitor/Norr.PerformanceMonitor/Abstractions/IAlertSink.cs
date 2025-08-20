@@ -1,4 +1,9 @@
-﻿using Norr.PerformanceMonitor.Alerting;
+// Copyright (c) Norr
+// Licensed under the MIT license.
+
+#nullable enable 
+
+using Norr.PerformanceMonitor.Alerting;
 
 namespace Norr.PerformanceMonitor.Abstractions;
 

@@ -1,51 +1,61 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageIcon>norr_250x250.png</PackageIcon>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageId>Norr.PerformanceMonitor</PackageId>
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <CompilerGeneratedFilesOutputPath>$(IntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
 
-        <Nullable>enable</Nullable>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <Deterministic>true</Deterministic>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <WarningsAsErrors>nullable</WarningsAsErrors>
+		<AssemblyName>Norr.PerformanceMonitor</AssemblyName>
+		<RootNamespace>Norr</RootNamespace>
+		<Description>Lightweight, production-grade performance monitoring primitives for .NET. OpenTelemetry-first, zero-bloat.</Description>
+		<PackageTags>norr;performance;monitoring;metrics;tracing;diagnostics</PackageTags>
+		<PackageIcon>Norr.PerformanceMonitor.png</PackageIcon>
 
-        <Authors>Norr</Authors>
-        <Company>Norr</Company>
-        <Description>High-performance monitoring tools for .NET: track execution time, generate flamegraphs, export to Prometheus, and receive alerts.</Description>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/berkayhuz/PerformanceMonitor</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/berkayhuz/PerformanceMonitor</RepositoryUrl>
-    </PropertyGroup>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>latest</LangVersion>
+		<NoWarn>$(NoWarn);CS1591;CS1573;CS8019</NoWarn>
 
-    <ItemGroup>
-        <None Include="norr_250x250.png" Pack="true" PackagePath="" />
-        <None Include="README.md" Pack="true" PackagePath="" />
-    </ItemGroup>
+		<UseDiagnostics>false</UseDiagnostics>
+		<UseMassTransit>true</UseMassTransit>
+		<UseMediatR>true</UseMediatR>
+		<UsePolly>true</UsePolly>
 
-    <ItemGroup>
-        <PackageReference Include="MassTransit" Version="8.5.1" />
-        <PackageReference Include="MediatR" Version="13.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
-        <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.621003" />
-        <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.23" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.7" />
-    </ItemGroup>
+		<IsPackable>true</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+		<PackageReference Include="Microsoft.Extensions.Http" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+		<PackageReference Include="Microsoft.Extensions.Options" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+
+		<PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseDiagnostics)' == 'true'">
+		<PackageReference Include="Microsoft.Diagnostics.NETCore.Client" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseMassTransit)' == 'true'">
+		<PackageReference Include="MassTransit" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseMediatR)' == 'true'">
+		<PackageReference Include="MediatR" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UsePolly)' == 'true'">
+		<PackageReference Include="Polly" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Diagnostics\Norr.Diagnostics.Abstractions\Norr.Diagnostics.Abstractions.csproj" />
+	</ItemGroup>
 
 </Project>

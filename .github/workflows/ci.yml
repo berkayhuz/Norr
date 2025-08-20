@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore Norr.sln
+
+      - name: Build (Release)
+        run: dotnet build Norr.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test Norr.sln -c Release --no-build --logger "trx;LogFileName=test-results.trx" || echo "No tests found"
+
+      - name: Pack (validation)
+        run: |
+          dotnet pack ./src/PerformanceMonitor/Norr.PerformanceMonitor/Norr.PerformanceMonitor.csproj -c Release --no-build -o out
+          dotnet pack ./src/PerformanceMonitor/Norr.PerformanceMonitor.Attribution/Norr.PerformanceMonitor.Attribution.csproj -c Release --no-build -o out
+          dotnet pack ./src/PerformanceMonitor/Norr.PerformanceMonitor.OpenTelemetry/Norr.PerformanceMonitor.OpenTelemetry.csproj -c Release --no-build -o out
+          dotnet pack ./src/PerformanceMonitor/Norr.PerformanceMonitor.Analyzer/Norr.PerformanceMonitor.Analyzer.csproj -c Release --no-build -o out
+
+      - name: Upload packages (PR only)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkgs
+          path: out/

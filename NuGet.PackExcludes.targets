@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>.dll;.xml;.json;.pri</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="**/bin/**;**/obj/**;**/.vs/**" />
+    <Content Remove="**/bin/**;**/obj/**;**/.vs/**" />
+    <EmbeddedResource Remove="**/bin/**;**/obj/**;**/.vs/**" />
+
+    <None Remove="**/*.user;**/*.suo;**/*.rsuser;**/*.sln.docstates;**/.DS_Store;**/Thumbs.db" />
+    <Content Remove="**/*.user;**/*.suo;**/*.rsuser;**/*.sln.docstates;**/.DS_Store;**/Thumbs.db" />
+
+    <None Remove="**/*.pdb;**/*.zip;**/*.7z;**/*.tar;**/*.cmd;**/*.bat;**/*.ps1;**/*.sh" />
+    <Content Remove="**/*.pdb;**/*.zip;**/*.7z;**/*.tar;**/*.cmd;**/*.bat;**/*.ps1;**/*.sh" />
+
+    <None Remove="**/packages/**;**/artifacts/**;**/node_modules/**" />
+    <Content Remove="**/packages/**;**/artifacts/**;**/node_modules/**" />
+  </ItemGroup>
+
+  <Target Name="Norr_EnforcePackExcludes" BeforeTargets="GenerateNuspec;Pack" />
+</Project>

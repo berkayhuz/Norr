@@ -1,104 +1,86 @@
-﻿# Norr.PerformanceMonitor.Attribution
+# Norr.PerformanceMonitor.Attribution
 
-🔧 Source generator for automatic performance instrumentation in .NET.  
-Just add `[MeasurePerformance]` to your methods — and get profiling for free.
-
-📦 [NuGet Package](https://www.nuget.org/packages/Norr.PerformanceMonitor.Attribution)  
-🔗 [GitHub Repository](https://github.com/berkayhuz/Norr)
+**Norr.PerformanceMonitor.Attribution** provides attribute-based configuration for the `Norr.PerformanceMonitor` library.  
+It allows you to annotate methods, classes, or assemblies with performance monitoring instructions without manually writing boilerplate code.
 
 ---
 
-## ✨ What It Does
+## Features
 
-This package includes:
-
-- 🧠 `[MeasurePerformance]` attribute
-- ⚙️ `PerformanceSourceGenerator` that auto-generates wrapper methods
-- 🪶 Lightweight, Roslyn-based source generation (no runtime overhead)
-- 🔍 Automatically measures:
-  - ⏱ Execution duration
-  - 🧠 Memory allocation
-  - 🔥 CPU usage (if supported)
+- Attribute-based performance monitoring.
+- Easily attach monitoring metadata to methods and classes.
+- Fine-grained control over monitoring behavior.
+- Minimal intrusion into your business logic.
 
 ---
 
-## 🚀 Example
-
-```csharp
-using Norr.PerformanceMonitor.Attribution;
-
-public class MyService
-{
-    [MeasurePerformance]
-    public void DoHeavyWork()
-    {
-        Thread.Sleep(500);
-    }
-}
-```
-
-After build, a partial method like this will be generated:
-
-```csharp
-public partial void DoHeavyWork_WithPerf(IPerformanceMonitor monitor)
-{
-    using var _ = monitor.Begin("MyService.DoHeavyWork");
-    DoHeavyWork();
-}
-```
-
-Use the generated method wherever you want full performance tracing.
-
----
-
-## 🧩 Usage with Norr.PerformanceMonitor
-
-```csharp
-var service = new MyService();
-service.DoHeavyWork_WithPerf(monitor);
-```
-
-You can then export data via:
-
-- Console
-- Prometheus
-- OTLP
-- Webhooks (Slack, Discord, etc.)
-
----
-
-## 🛠️ Requirements
-
-- .NET 6 or newer (supports .NET Standard 2.0 for compatibility)
-- Roslyn-compatible IDE (Visual Studio 2022+, Rider, etc.)
-
----
-
-## 📦 Installation
+## Installation
 
 ```bash
 dotnet add package Norr.PerformanceMonitor.Attribution
 ```
 
-Make sure your `.csproj` includes:
+---
 
-```xml
-<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+## Usage
+
+### 1. Annotating a method
+
+```csharp
+using Norr.PerformanceMonitor.Attribution;
+
+public class OrderService
+{
+    [PerformanceMonitor(OperationName = "Order.Create", Category = "Order", Component = "Service")]
+    public void CreateOrder(Order order)
+    {
+        // Business logic here...
+    }
+}
+```
+
+### 2. Annotating a class
+
+```csharp
+[PerformanceMonitor(Category = "Order")]
+public class OrderService
+{
+    [PerformanceMonitor(OperationName = "Order.Create", Component = "Service")]
+    public void CreateOrder(Order order) { }
+
+    [PerformanceMonitor(OperationName = "Order.Cancel", Component = "Service")]
+    public void CancelOrder(int orderId) { }
+}
 ```
 
 ---
 
-## 📚 Related Packages
+## Attribute properties
 
-- [`Norr.PerformanceMonitor`](https://www.nuget.org/packages/Norr.PerformanceMonitor): Core performance monitoring engine
-- [`Norr.PerformanceMonitor.Attribution`](https://www.nuget.org/packages/Norr.PerformanceMonitor.Attribution): Source generator & attributes
-
----
-
-## 📄 License
-
-MIT License — See [LICENSE](../LICENSE)
+| Property        | Type     | Description |
+|----------------|----------|-------------|
+| `OperationName`| `string` | Name of the monitored operation. |
+| `Category`     | `string` | Logical category for the operation. |
+| `Component`    | `string` | Component or subsystem name. |
+| `Enabled`      | `bool`   | Whether monitoring is active for the target. |
 
 ---
 
-Built with by [@berkayhuz](https://github.com/berkayhuz)
+## How it works
+
+When the `Norr.PerformanceMonitor` system is initialized, it will scan your assemblies for the `[PerformanceMonitor]` attribute and automatically register monitoring for the annotated members.
+
+This allows you to configure monitoring **declaratively** rather than programmatically.
+
+---
+
+## Requirements
+
+- .NET 9
+- Norr.PerformanceMonitor core library
+
+---
+
+## License
+
+MIT © Norr

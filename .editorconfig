@@ -1,35 +1,25 @@
 root = true
 
-##########################################################
-# 🌐 General Settings
-##########################################################
 [*]
-charset = utf-8-bom
+charset = utf-8
+indent_style = space
+indent_size = 4
 end_of_line = crlf
 insert_final_newline = true
 trim_trailing_whitespace = true
-indent_style = space
-indent_size = 4
 
-
-##########################################################
-# 🔧 C# Specific Settings
-##########################################################
 [*.cs]
 
-# 🔹 Using Directive Settings
 csharp_using_directive_placement = outside_namespace:warning
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = true
 csharp_style_namespace_declarations = file_scoped:suggestion
 
-# 🔹 Qualification Requirements (this. usage)
 dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_event = false:suggestion
 
-# 🔹 New Line and Indentation Rules
 csharp_new_line_before_open_brace = all
 csharp_indent_block_contents = true
 csharp_indent_case_contents = true
@@ -38,7 +28,6 @@ csharp_indent_labels = flush_left
 csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = false
 
-# 🔹 Code Style: var, switch, interpolation etc.
 csharp_style_var_elsewhere = true:suggestion
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
@@ -52,17 +41,10 @@ csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
 csharp_style_prefer_switch_expression = true:suggestion
 csharp_style_prefer_simplified_interpolation = true:suggestion
 
-# 🔹 Diagnostic Warnings and Severity Levels
-dotnet_diagnostic.IDE0005.severity = warning   # unnecessary using
-dotnet_diagnostic.IDE0044.severity = suggestion # suggest readonly field
-dotnet_diagnostic.IDE0060.severity = suggestion # unused parameter
+dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.IDE0044.severity = suggestion
+dotnet_diagnostic.IDE0060.severity = suggestion
 
-
-##########################################################
-# ✨ Naming Rules (Optional but useful)
-##########################################################
-
-# 🟩 Rule: Private readonly fields should be camelCase with "_" prefix
 dotnet_naming_rule.private_fields_should_be_camel_case.severity = warning
 dotnet_naming_rule.private_fields_should_be_camel_case.symbols = private_fields
 dotnet_naming_rule.private_fields_should_be_camel_case.style = camel_case
@@ -74,3 +56,23 @@ dotnet_naming_symbols.private_fields.required_modifiers = readonly
 dotnet_naming_style.camel_case.capitalization = camel_case
 dotnet_naming_style.camel_case.required_prefix = _
 dotnet_naming_style.camel_case.required_suffix =
+
+[*.{cs,vb}]
+dotnet_diagnostic.RS0016.severity = none
+dotnet_diagnostic.RS0017.severity = none
+dotnet_diagnostic.RS0018.severity = none
+dotnet_diagnostic.IDE0059.severity = none
+dotnet_diagnostic.IDE0079.severity = none
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.RS0022.severity = none
+dotnet_diagnostic.IDE0130.severity = none
+dotnet_diagnostic.SA1650.severity = none
+dotnet_diagnostic.CA1704.severity = none
+dotnet_diagnostic.CA2204.severity = none
+
+[*.{cs,cpp,md}]
+spelling_languages = en-us,tr-tr
+spelling_error_severity = hint
+spelling_checkable_types = identifiers,comments,strings
+
+file_header_template = Copyright (c) Norr\nLicensed under the MIT license.\n#nullable enable\n

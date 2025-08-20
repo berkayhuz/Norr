@@ -1,0 +1,95 @@
+<Project>
+
+  <PropertyGroup>
+    <EnableLicenseHeaderCheck Condition="'$(EnableLicenseHeaderCheck)'==''">false</EnableLicenseHeaderCheck>
+    <EnableLicenseHeaderCheck Condition="'$(CI)'=='true'">true</EnableLicenseHeaderCheck>
+
+    <KeepLicenseHeaderList Condition="'$(KeepLicenseHeaderList)'==''">false</KeepLicenseHeaderList>
+
+    <EnsureHeaderScript>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)build\EnsureLicenseHeader.ps1'))</EnsureHeaderScript>
+
+    <LicenseHeaderListFile>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(BaseIntermediateOutputPath)license-file-list.txt'))</LicenseHeaderListFile>
+
+    <PwshPathWindows>$(ProgramFiles)\PowerShell\7\pwsh.exe</PwshPathWindows>
+    <WinPsPathWindows>$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe</WinPsPathWindows>
+
+    <EnsureHeaderIgnoreExitCode>false</EnsureHeaderIgnoreExitCode>
+    <EnsureHeaderVerbose>true</EnsureHeaderVerbose>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath=""
+          Condition="Exists('$(MSBuildThisFileDirectory)LICENSE')" />
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath=""
+          Condition="Exists('$(MSBuildThisFileDirectory)README.md')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <CsFiles Include="**\*.cs"
+             Exclude="**\obj\**;**\bin\**;**\*.g.cs;**\*.designer.cs;**\AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <Target Name="WriteLicenseHeaderFileList"
+          Condition="'$(EnableLicenseHeaderCheck)'=='true'"
+          Inputs="@(CsFiles)"
+          Outputs="$(LicenseHeaderListFile)">
+
+    <MakeDir Directories="$(BaseIntermediateOutputPath)" />
+    <WriteLinesToFile
+        File="$(LicenseHeaderListFile)"
+        Lines="@(CsFiles->'%(FullPath)')"
+        Overwrite="true"
+        Encoding="UTF-8" />
+
+    <Message Importance="high" Text="[Norr] CsFiles count = @(CsFiles->Count())"
+             Condition="'$(EnsureHeaderVerbose)'=='true'" />
+    <Message Importance="high" Text="[Norr] LicenseHeaderListFile = '$(LicenseHeaderListFile)'"
+             Condition="'$(EnsureHeaderVerbose)'=='true'" />
+  </Target>
+
+  <Target Name="Norr_EnsureLicenseHeader"
+          BeforeTargets="CoreCompile"
+          DependsOnTargets="WriteLicenseHeaderFileList"
+          Condition="'$(EnableLicenseHeaderCheck)'=='true'
+                     AND '$(DesignTimeBuild)'!='true'
+                     AND Exists('$(EnsureHeaderScript)')
+                     AND Exists('$(LicenseHeaderListFile)')">
+
+    <ReadLinesFromFile File="$(LicenseHeaderListFile)">
+      <Output TaskParameter="Lines" ItemName="__HeaderListLines" />
+    </ReadLinesFromFile>
+
+    <Message Importance="high"
+             Text="[Norr] HeaderListLines count = @(__HeaderListLines->Count())"
+             Condition="'$(EnsureHeaderVerbose)'=='true'" />
+
+    <PropertyGroup>
+      <__HasLines>@(__HeaderListLines->Count())</__HasLines>
+    </PropertyGroup>
+
+    <Exec Condition="'$(OS)'!='Windows_NT' AND '$(__HasLines)'!='0'"
+          UseCommandProcessor="false"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High"
+          Command="pwsh -NoProfile -NonInteractive -NoLogo -ExecutionPolicy Bypass -File &quot;$(EnsureHeaderScript)&quot; -ListFile &quot;$(LicenseHeaderListFile)&quot;" />
+
+    <Exec Condition="'$(OS)'=='Windows_NT' AND Exists('$(PwshPathWindows)') AND '$(__HasLines)'!='0'"
+          UseCommandProcessor="false"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High"
+          Command="&quot;$(PwshPathWindows)&quot; -NoProfile -NonInteractive -NoLogo -ExecutionPolicy Bypass -File &quot;$(EnsureHeaderScript)&quot; -ListFile &quot;$(LicenseHeaderListFile)&quot;" />
+
+    <Exec Condition="'$(OS)'=='Windows_NT' AND !Exists('$(PwshPathWindows)') AND Exists('$(WinPsPathWindows)') AND '$(__HasLines)'!='0'"
+          UseCommandProcessor="false"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High"
+          Command="&quot;$(WinPsPathWindows)&quot; -NoProfile -NonInteractive -NoLogo -ExecutionPolicy Bypass -File &quot;$(EnsureHeaderScript)&quot; -ListFile &quot;$(LicenseHeaderListFile)&quot;" />
+  </Target>
+
+  <Target Name="Norr_CleanLicenseHeaderFileList"
+          AfterTargets="Norr_EnsureLicenseHeader"
+          Condition="'$(EnableLicenseHeaderCheck)'=='true' AND '$(KeepLicenseHeaderList)'!='true'">
+    <Delete Files="$(LicenseHeaderListFile)" ContinueOnError="true" />
+  </Target>
+
+</Project>

@@ -1,8 +1,14 @@
-﻿namespace Norr.PerformanceMonitor.Abstractions;
+// Copyright (c) Norr
+// Licensed under the MIT license.
+
+#nullable enable 
+
+
+namespace Norr.PerformanceMonitor.Abstractions;
 
 /// <summary>
 /// Determines, for each incoming operation, whether detailed metrics should be
-/// recorded.  Implementations may use probabilistic algorithms (<em>p-sampling</em>),
+/// recorded. Implementations may use probabilistic algorithms (<em>p-sampling</em>),
 /// deterministic hashing, adaptive/heat-map logic, etc., to reduce overhead on
 /// high-throughput systems.
 /// </summary>
@@ -14,8 +20,8 @@ public interface ISampler
     /// <c>false</c>.
     /// </summary>
     /// <param name="name">
-    /// Logical operation name (e.g.&nbsp;<c>"OrderService.PlaceOrder"</c> or
-    /// <c>"HTTP GET /api/orders"</c>).
+    /// Logical operation name (e.g., <c>OrderService.PlaceOrder</c> or
+    /// <c>HTTP GET /api/orders</c>).
     /// </param>
     bool ShouldSample(string name);
 }
